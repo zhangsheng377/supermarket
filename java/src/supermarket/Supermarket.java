@@ -1,15 +1,12 @@
 package supermarket;
 
-import javax.swing.JFrame;
-
-@SuppressWarnings("serial")
-public class Supermarket extends JFrame{
+public class Supermarket {
 	public Supermarket(){
-		super();
 	}
 	
 	public static void main(String[] args) {
 		Login login_window=new Login();
 		login_window.setVisible(true);
+		System.out.println("isLogin = "+login_window.getIsLogin());
 	}
 }
