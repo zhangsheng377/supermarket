@@ -21,10 +21,12 @@ public class Login extends JDialog {
 	private JTextField textField_1;
 	private JPasswordField passwordField;
 	
-	private boolean isLogin=false;
-	
-	public boolean getIsLogin() {
-		return isLogin;
+	public String getName() {
+		return textField_1.getText();
+	}
+	@SuppressWarnings("deprecation")
+	public String getPassword() {
+		return passwordField.getText();
 	}
 
 	/**
@@ -58,8 +60,6 @@ public class Login extends JDialog {
 		JButton btnNewButton = new JButton("login");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				isLogin=true;
-				System.out.println("logined");
 				dispose();
 			}
 		});
@@ -68,8 +68,8 @@ public class Login extends JDialog {
 		JButton btnNewButton_1 = new JButton("exit");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				isLogin=false;
-				System.out.println("failed");
+				textField_1.setText(null);
+				passwordField.setText(null);
 				dispose();
 			}
 		});
