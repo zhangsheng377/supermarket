@@ -14,9 +14,12 @@ import javax.swing.SwingConstants;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
-@SuppressWarnings("serial")
 public class Login extends JDialog {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField textField_1;
 	private JPasswordField passwordField;
@@ -24,9 +27,8 @@ public class Login extends JDialog {
 	public String getName() {
 		return textField_1.getText();
 	}
-	@SuppressWarnings("deprecation")
 	public String getPassword() {
-		return passwordField.getText();
+		return new String(passwordField.getPassword());
 	}
 
 	/**
