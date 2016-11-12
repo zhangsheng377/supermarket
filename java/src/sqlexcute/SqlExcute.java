@@ -8,26 +8,27 @@ import java.sql.Statement;
 
 public class SqlExcute {
 	private static Connection connection;
-	
-	public SqlExcute(String database){
+
+	public SqlExcute(String database) {
 		try {
 			Class.forName("org.sqlite.JDBC");
-			connection = DriverManager.getConnection("jdbc:sqlite:"+database);
-			System.out.println("Opened database successfully");
+			connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+			System.out.println("Opened database : " + database + " successfully");
 		} catch (ClassNotFoundException | SQLException e) {
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
 	}
-	public SqlExcute(Connection conn){
-		connection=conn;
+
+	public SqlExcute(Connection conn) {
+		connection = conn;
 	}
-	
+
 	public Connection getConnection() {
 		return connection;
 	}
-	
-	public void close(){
+
+	public void close() {
 		try {
 			connection.close();
 		} catch (SQLException e) {
@@ -35,7 +36,7 @@ public class SqlExcute {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public ResultSet sql_select_execute(String sql) {
 		Statement stmt;
 		ResultSet rs;
@@ -43,8 +44,7 @@ public class SqlExcute {
 			stmt = connection.createStatement();
 			rs = stmt.executeQuery(sql);
 		} catch (SQLException e) {
-			// TODO 自动生成的 catch 块
-			e.printStackTrace();
+			System.out.println("sql_select_execute " + sql + " : error : " + e);
 			return null;
 		}
 		return rs;
@@ -57,8 +57,7 @@ public class SqlExcute {
 			stmt.executeUpdate(sql);
 			stmt.close();
 		} catch (SQLException e) {
-			// TODO 自动生成的 catch 块
-			e.printStackTrace();
+			System.out.println("sql_execute " + sql + " : error : " + e);
 			return false;
 		}
 		return true;

@@ -5,26 +5,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import server.ServerInfo;
 import sqlexcute.SqlExcute;
 
 public class Supermarket implements ServerInfo {
 	private static SqlExcute sqlExcute;
-	private static String database="test.db";
+	private static String database;
 	private static Socket socket;
 	private static BufferedReader iBufferedReader;
 	private static PrintWriter oPrintWriter;
-
-	public Supermarket(String database) {
-		// TODO 自动生成的构造函数存根
-		sqlExcute=new SqlExcute(database);
-	}
+	private static String name;
+	private static Map<String, ChatMessage> chatingMap_targetname_chatmessage = new HashMap<String, ChatMessage>();
 
 	public class ReadSocket extends Thread {
 		public void run() {
-			System.out.println("ReadSocket run start");
-			System.out.println("ReadSocket socket isClosed :" + socket.isClosed());
 			while (true) {
 				String string = null;
 				try {
@@ -38,13 +36,49 @@ public class Supermarket implements ServerInfo {
 				}
 				if (string != null) {
 					System.out.println("ReadSocket recieved : " + string);
-					String[] strings=string.split(" ");
+					String[] strings = string.split(" ");
 					switch (strings[0]) {
 					case "login":
-						if(strings[1].equals("true")){
-							ChatMessage chatMessage_window=new ChatMessage(sqlExcute.getConnection());
-							chatMessage_window.setVisible(true);
+						if (strings[1].equals("true")) {
 							System.out.println("login true");
+							database = name + ".db";
+							sqlExcute = new SqlExcute(database);
+							@SuppressWarnings("unused")
+							MainJFrame mainJFrame = new MainJFrame(sqlExcute, name, oPrintWriter,
+									chatingMap_targetname_chatmessage);
+							// System.out.println("under mainJFrame");
+						}
+						break;
+
+					case "message":
+						String temp_string = "";
+						for (int i = 2; i < strings.length; i++) {
+							temp_string = temp_string + " " + strings[i];
+						}
+						temp_string = temp_string.trim();
+						System.out.println(strings[1] + " says : " + temp_string);
+
+						String tablenameString = "chat_" + strings[1];
+						String sql = "select * from " + tablenameString;
+						ResultSet resultSet = sqlExcute.sql_select_execute(sql);
+						if (resultSet == null) {
+							sql = "CREATE TABLE " + tablenameString + " (SPEAKER TEXT NOT NULL, CONTENT TEXT)";
+							sqlExcute.sql_execute(sql);
+							System.out.println("create table end");
+						}
+						sql = "INSERT INTO " + tablenameString + " (SPEAKER,CONTENT) VALUES ('" + strings[1] + "', '"
+								+ temp_string + "')";
+						sqlExcute.sql_execute(sql);
+
+						ChatMessage chatMessage_window = chatingMap_targetname_chatmessage.get(strings[1]);
+						if (chatMessage_window == null) {
+							System.out.println("Supermarket chatMessage_window == null");
+							chatMessage_window = new ChatMessage(sqlExcute, name, strings[1], oPrintWriter,
+									chatingMap_targetname_chatmessage);
+							chatingMap_targetname_chatmessage.put(strings[1], chatMessage_window);
+						} else {
+							System.out.println("Supermarket chatMessage_window isnot null");
+							chatMessage_window.addText(strings[1] + " said : " + temp_string);
 						}
 						break;
 
@@ -60,84 +94,38 @@ public class Supermarket implements ServerInfo {
 				oPrintWriter.close();
 				socket.close();
 			} catch (IOException e) {
-				// TODO 自动生成的 catch 块
 				System.out.println("ReadSocket end");
 				e.printStackTrace();
 			}
-
 		}
 	}
 
 	public static void main(String[] args) {
-		Supermarket supermarket = new Supermarket(database);
+		Supermarket supermarket = new Supermarket();
 
 		Login login_window = new Login();
 		login_window.setVisible(true);
-		String name = login_window.getName();
+		name = login_window.getName();
 		String password = login_window.getPassword();
 		System.out.println("name = " + name);
 		System.out.println("password = " + password);
-		
+
 		try {
 			socket = new Socket(serverHost, serverPort);
 			iBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			oPrintWriter = new PrintWriter(socket.getOutputStream());
 			supermarket.new ReadSocket().start();
-			
-			oPrintWriter.println("login "+name+" "+password);
+
+			oPrintWriter.println("login " + name + " " + password);
 			oPrintWriter.flush();
 		} catch (IOException e) {
-			// TODO 自动生成的 catch 块
 			e.printStackTrace();
 		}
 
-		/*ResultSet resultSet = null;
-		String sql;
-		String resultString = null;
-		// sql = "CREATE TABLE PEOPLE (NAME INT PRIMARY KEY NOT NULL, PASSWORD
-		// TEXT NOT NULL)";
-		// System.out.println("sql creat table = " + sql_execute(sql));
-		// sql = "INSERT INTO PEOPLE (NAME,PASSWORD) VALUES ('abc', '1qa');";
-		// System.out.println("sql insert table = " + sql_execute(sql));
-
-		sql = "select count(*) from people where name='" + name + "' and password='" + password + "'";
-		resultSet=sqlExcute.sql_select_execute(sql);
-		if(resultSet!=null){
-			try {
-				resultString=resultSet.getString(1);
-			} catch (SQLException e1) {
-				// TODO 自动生成的 catch 块
-				e1.printStackTrace();
-			}
-		}
-		System.out.println(resultString);
-		if (resultString.equals("1")) {
-			System.out.println("login successed");
-			try {
-				socket = new Socket(serverHost, serverPort);
-				iBufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				oPrintWriter = new PrintWriter(socket.getOutputStream());
-				ReadSocket readSocket = supermarket.new ReadSocket();
-				readSocket.start();
-
-				oPrintWriter.println("hello from client");
-				oPrintWriter.flush();
-				oPrintWriter.println("hello from client");
-				oPrintWriter.flush();
-				System.out.println("oPrintWriter is over");
-
-			} catch (IOException e) {
-				// TODO 自动生成的 catch 块
-				e.printStackTrace();
-			}
-		} else {
-			System.out.println("login failed");
-		}*/
-
-		System.out.println("end");
-		sqlExcute.close();
-		//iBufferedReader.close();
-		//oPrintWriter.close();
-		//socket.close();
+		// System.out.println("end");
+		// sqlExcute.close();
+		// iBufferedReader.close();
+		// oPrintWriter.close();
+		// socket.close();
 	}
 }
